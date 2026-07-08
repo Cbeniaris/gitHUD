@@ -1,6 +1,7 @@
 # gitHUD
 
-A bare-bones terminal UI for the git workflow you actually do day to day:
+Tired of having to cd into a directory just to run git pull every time you switch devices?  
+Me too, that's why gitHUD now exists. gitHUd is a bare-bones terminal UI for the git workflow you actually do day to day:
 pull, push, commit, browse status/diff/log. No feature bloat, no GitHub
 account integration, just a thin wrapper around the real `git` binary with
 a fast repo picker so you never have to `cd` to a repo just to run
