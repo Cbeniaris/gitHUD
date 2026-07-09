@@ -57,7 +57,7 @@ This adds the repo to `~/.config/githud/repos.json` on that machine.
 This file is **not synced** between your Fedora box and your MacBook on
 purpose -- paths like `/mnt/drivename/unity/project` on Fedora don't mean
 anything on macOS, so each machine keeps its own independent list. Just
-run `gg --here` once per repo on each machine you use it from.
+run `gg --here` once per repo on each machine you use it from.  
 
 **Launch the picker:**
 
