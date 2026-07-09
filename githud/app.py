@@ -15,8 +15,20 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Header, Input, RichLog, Static
+from rich.text import Text
 
 from . import config, git
+
+def format_status_cell(code: str) -> Text:
+        """Turn a 2-char porcelain code into a fixed-position, color-coded cell
+        so the indicator never visually shifts between staged/unstaged -- only
+        its color and a checkmark change.
+        """
+        staged = code[0] not in (" ", "?")
+        letter = code[0] if code[0] != " " else code[1]
+        mark = "\u2713" if staged else " "  # checkmark
+        style = "bold green" if staged else "dim"
+        return Text(f"{mark} {letter}", style=style)
 
 
 class RepoPicker(Screen):
@@ -154,7 +166,7 @@ class RepoView(Screen):
         table = self.query_one("#files_table", DataTable)
         table.clear()
         for code, path in self._entries:
-            table.add_row(code, path)
+            table.add_row(format_status_cell(code), path)   
         log_log = self.query_one("#log_log", RichLog)
         log_log.clear()
         log_log.write(git.log(self.repo_path))
@@ -256,6 +268,8 @@ class RepoView(Screen):
 
     def set_status(self, message: str) -> None:
         self.query_one("#status_line", Static).update(message)
+
+    
 
 
 class MyGitApp(App):
