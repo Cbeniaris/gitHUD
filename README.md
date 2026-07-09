@@ -16,7 +16,7 @@ machines).
 **From GitHub, editable clone (recommended -- update with `git pull`):**
 
 ```bash
-git clone https://github.com/yourusername/gitHUD.git
+git clone https://github.com/cbeniaris/gitHUD.git
 cd gitHUD
 pip install -e . --break-system-packages   # Fedora
 pip install -e .                            # macOS
@@ -33,7 +33,7 @@ No reinstall needed -- the editable install points straight at the source.
 **From GitHub, one-shot install (no local clone kept):**
 
 ```bash
-pip install git+https://github.com/yourusername/gitHUD.git --break-system-packages
+pip install git+https://github.com/cbeniaris/gitHUD.git --break-system-packages
 ```
 
 Re-run the same command (or add `--upgrade`) to pick up updates.
@@ -55,7 +55,7 @@ gg --here
 
 This adds the repo to `~/.config/githud/repos.json` on that machine.
 This file is **not synced** between your Fedora box and your MacBook on
-purpose -- paths like `/mnt/drivename/unity/project` on Fedora don't mean
+purpose -- paths like `/mnt/drivename/projects/*` on Fedora don't mean
 anything on macOS, so each machine keeps its own independent list. Just
 run `gg --here` once per repo on each machine you use it from.  
 
