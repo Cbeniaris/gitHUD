@@ -91,3 +91,22 @@ def push(repo_path: str) -> str:
 
 def pull(repo_path: str) -> str:
     return _run(repo_path, ["pull"])
+
+
+def has_remote(repo_path: str, name: str) -> bool:
+    try:
+        _run(repo_path, ["remote", "get-url", name])
+        return True
+    except GitError:
+        return False
+
+
+def set_origin(repo_path: str, url: str) -> None:
+    if has_remote(repo_path, "origin"):
+        _run(repo_path, ["remote", "set-url", "origin", url])  # origin exists, so update it
+    else:
+        _run(repo_path, ["remote", "add", "origin", url])
+
+
+def set_branch(repo_path: str, branch: str) -> None:
+    _run(repo_path, ["branch", "-M", branch])  # rename current branch, works before first commit too

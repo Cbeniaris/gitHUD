@@ -132,6 +132,7 @@ class RepoView(Screen):
         Binding("c", "start_commit", "Commit"),
         Binding("p", "push", "Push"),
         Binding("u", "pull", "Pull"),
+        Binding("o", "start_configure", "Configure"),
         Binding("r", "refresh", "Refresh"),
         Binding("escape", "back", "Back", priority=True),
         Binding("q", "back", "Back"),
@@ -143,6 +144,8 @@ class RepoView(Screen):
         self.repo_path = path
         self._entries: list[tuple[str, str]] = []
         self._committing = False
+        self._configure_step: str | None = None  # None, "origin", or "branch"
+        self._pending_origin = ""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -151,6 +154,7 @@ class RepoView(Screen):
             yield RichLog(id="diff_log", highlight=True, markup=False, wrap=True)
         yield RichLog(id="log_log", highlight=True, markup=False, max_lines=200)
         yield Input(placeholder="commit message -- enter to confirm, esc to cancel", id="commit_input")
+        yield Input(placeholder="origin url -- enter to confirm, esc to cancel", id="configure_input")
         yield Static("", id="status_line")
         yield Footer()
 
@@ -159,6 +163,7 @@ class RepoView(Screen):
         table = self.query_one("#files_table", DataTable)
         table.add_columns("St", "File")
         self.query_one("#commit_input", Input).display = False
+        self.query_one("#configure_input", Input).display = False
         self.refresh_all()
 
     def refresh_all(self) -> None:
@@ -220,7 +225,24 @@ class RepoView(Screen):
         commit_input.focus()
         self._committing = True
 
+    def action_start_configure(self) -> None:
+        configure_input = self.query_one("#configure_input", Input)
+        configure_input.placeholder = "origin url -- enter to confirm, esc to cancel"
+        configure_input.display = True
+        configure_input.value = ""
+        configure_input.focus()
+        self._configure_step = "origin"
+
+    def end_configure(self) -> None:
+        self.query_one("#configure_input", Input).display = False
+        self._configure_step = None
+        self._pending_origin = ""
+        self.set_focus(None)
+
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id == "configure_input":
+            self.handle_configure_submit(event)
+            return
         if event.input.id != "commit_input":
             return
         message = event.value.strip()
@@ -236,6 +258,29 @@ class RepoView(Screen):
             self.set_status(f"Committed: {message}")
         except git.GitError as e:
             self.set_status(f"Commit failed: {e}")
+        self.refresh_all()
+
+    def handle_configure_submit(self, event: Input.Submitted) -> None:
+        value = event.value.strip()
+        if self._configure_step == "origin":
+            if not value:
+                self.end_configure()
+                self.set_status("Configure cancelled (empty origin).")
+                return
+            self._pending_origin = value
+            self._configure_step = "branch"
+            event.input.placeholder = "branch -- enter to confirm, esc to cancel"
+            event.input.value = "main"  # default branch
+            return
+        branch = value or "main"
+        origin = self._pending_origin
+        self.end_configure()
+        try:
+            git.set_origin(self.repo_path, origin)
+            git.set_branch(self.repo_path, branch)
+            self.set_status(f"Configured: origin -> {origin}, branch -> {branch}")
+        except git.GitError as e:
+            self.set_status(f"Configure failed: {e}")
         self.refresh_all()
 
     def action_push(self) -> None:
@@ -263,6 +308,9 @@ class RepoView(Screen):
             commit_input.display = False
             self._committing = False
             self.set_focus(None)
+            return
+        if self._configure_step is not None:
+            self.end_configure()
             return
         self.app.pop_screen()
 
@@ -294,6 +342,9 @@ class MyGitApp(App):
         padding-left: 1;
     }
     #commit_input {
+        display: none;
+    }
+    #configure_input {
         display: none;
     }
     """
